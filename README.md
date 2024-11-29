@@ -1,10 +1,10 @@
-# Delivery Hero Staff Analytics Engineering | Technical Test case
+# DH SAEgit | Technical Test case
 
 I would like to start by saying I would have liked more context of the business model this case study represents and a data dictionary would have been awesome.
 
 Also, without a question a stakeholder engagement is necessary to get the most out this case study.   
    
-   
+
 ## ER Diagram
 
 https://dbdiagram.io/d/Delivery-Hero-Staff-Analytics-Engineering-or-Technical-Test-case-67465bb2e9daa85acad130b6
