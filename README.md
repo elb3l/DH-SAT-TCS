@@ -1,4 +1,4 @@
-# DH SAEgit | Technical Test case
+# DH SAE | Technical Test case
 
 I would like to start by saying I would have liked more context of the business model this case study represents and a data dictionary would have been awesome.
 
