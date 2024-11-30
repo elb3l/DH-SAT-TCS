@@ -9,7 +9,7 @@ Also, without a question a stakeholder engagement is necessary to get the most o
 
 https://dbdiagram.io/d/Delivery-Hero-Staff-Analytics-Engineering-or-Technical-Test-case-67465bb2e9daa85acad130b6
 
-## Code
+## SQL
 <br />
 
 **`qualified_customer_orders` materialized view**
@@ -346,21 +346,12 @@ with customer_orders_data as
     )
     , assignments as (
     select
-        o.partition_date
-      , o.placed_at_utc
-      , o.order_id
-      , o.brand
-      , o.customer_id
-      , o.order_value_eur
-      , o.discount_value_eur
-      , o.is_successful
-      , o.voucher_value_eur
-      , o.no_of_cs_contact
-      , o.last_contact_at
-      , o.last_contact_reason
+        e.partition_date
+      , e.brand
       , e.device
       , e.session_id
-      , e.client_id      
+      , e.client_id
+      , e.customer_id
       , e.list_of_events
       , e.max_event_reached
       , e.transaction_id
@@ -368,6 +359,15 @@ with customer_orders_data as
       -- , e.experimentId
       -- , e.experimentVariation
       , e.no_of_events
+      , o.placed_at_utc
+      , o.order_id
+      , o.order_value_eur
+      , o.discount_value_eur
+      , o.is_successful
+      , o.voucher_value_eur
+      , o.no_of_cs_contact
+      , o.last_contact_at
+      , o.last_contact_reason
       , x.request_id
       , x.response_id
       , x.experiment_key
@@ -378,8 +378,8 @@ with customer_orders_data as
       , x.language_code
       , x.payload_brand
       , x.pro_customer
-    from qualified_customer_orders o
-    left join events e on o.partition_date = e.partition_date and o.customer_id = e.customer_id and o.order_id = e.transaction_id
+    from events e
+    left join qualified_customer_orders o on o.partition_date = e.partition_date and o.customer_id = e.customer_id and o.order_id = e.transaction_id
     left join experiments x on e.partition_date = x.partition_date and e.session_id = x.session_id and e.client_id = x.client_id
     )
     select 
@@ -395,16 +395,21 @@ with customer_orders_data as
 
 ```sql
 
-    select
+    select 
       experiment_key
     , experiment_variation
-    , experiment_variation_name     
     , country_code
     , device
-    , is_successful
+    , coalesce(is_successful, false) as is_successful
     , count(distinct order_id) as no_of_orders
+    , sum(count(distinct partition_date||session_id||client_id||customer_id)) over() as no_of_journeys
     from assignments
-    group by 1,2,3,4,5,6;
+    group by
+      experiment_key
+    , experiment_variation
+    , country_code
+    , device
+    , coalesce(is_successful, false);
 ```    
 <br />
 
@@ -416,14 +421,17 @@ with customer_orders_data as
 
     select
       session_id
+    , experiment_key  
     , experiment_variation
     , country_code
     , device
     , sum(COALESCE(order_value_eur, 0) - COALESCE(discount_value_eur, 0) - COALESCE(voucher_value_eur, 0)) as net_order_value
     from assignments
-    where is_successful is true
-    group by 1,2,3,4;
+    where coalesce(is_successful, false) is true
+    group by 
+      session_id
+    , experiment_key  
+    , experiment_variation
+    , country_code
+    , device;
 ``` 
-
-<br />
-</details>
